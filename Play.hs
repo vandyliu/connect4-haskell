@@ -37,6 +37,7 @@ personPlay game (ContinueGame state) opponent ts =
    do
       let State internal avail = state
       let (slots, colour, board) = internal
+      putStrLn(show board)
       printBoard board
       putStrLn ("Choose one of "++show avail)
       line <- getLine

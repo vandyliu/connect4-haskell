@@ -1,6 +1,7 @@
 module Connect4 where
 
-import System.Random
+import Data.Time
+import Data.Time.Clock.POSIX
 import System.IO
 
 data State = State InternalState [Action]  -- internal_state available_actions
@@ -57,8 +58,8 @@ printBoard board =
 getRow :: Int -> [[TeamColour]] -> [Char]
 getRow n [] = []
 getRow n (col:restCol) = 
-    if n < length col then
-        show (col !! n) ++ " " ++ getRow n restCol
+    if (n-1) < length col then
+        show (col !! (n-1)) ++ " " ++ getRow n restCol
     else
         "* " ++ getRow n restCol
 
@@ -77,8 +78,9 @@ instance Read Action where
 ------- A Player -------
 
 simplePlayer :: Player
--- this player has an ordering of the moves, and chooses the first one available
-simplePlayer (State _ avail) = head [Action e | e <- [1..7],
+-- simplePlayer has an ordering of the moves, and chooses the first one available
+-- The order is it will choose the middle one first, then whatever is closest to the middle next
+simplePlayer (State _ avail) = head [Action e | e <- [4, 3, 5, 2, 6, 1, 7],
                                                Action e `elem` avail]
 
 -- Test cases

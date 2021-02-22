@@ -23,57 +23,59 @@ play game start_state opponent ts =
       line <- getLine
       if line == "0"
         then
-            person_play game (ContinueGame start_state) opponent ts
+            personPlay game (ContinueGame start_state) opponent ts
         else if line ==  "1"
-             then computer_play game (ContinueGame start_state) opponent ts
+             then computerPlay game (ContinueGame start_state) opponent ts
         else if line == "2"
             then return ts
         else play game start_state opponent ts
 
-person_play :: Game -> Result -> Player -> TournammentState -> IO TournammentState
+personPlay :: Game -> Result -> Player -> TournammentState -> IO TournammentState
 -- opponent has played, the person must now play
 
-person_play game (ContinueGame state) opponent ts =
+personPlay game (ContinueGame state) opponent ts =
    do
       let State internal avail = state
-      putStrLn ("State: "++show internal++" choose one of "++show avail)
+      let (slots, colour, board) = internal
+      printBoard board
+      putStrLn ("Choose one of "++show avail)
       line <- getLine
       case (readMaybe line :: Maybe Action) of
         Nothing ->
-           person_play game (ContinueGame state) opponent ts
+           personPlay game (ContinueGame state) opponent ts
         Just action ->
            if (action `elem` avail)
              then
-                computer_play game (game action state) opponent ts
+                computerPlay game (game action state) opponent ts
              else
                do
                 putStrLn ("Illegal move: "++ show action)
-                person_play game (ContinueGame state) opponent ts
+                personPlay game (ContinueGame state) opponent ts
 
-person_play game (EndOfGame val start_state) opponent ts =
+personPlay game (EndOfGame val start_state) opponent ts =
   do
-    newts <- update_tournament_state (-val) ts  -- val is value to computer; -val is value for person
+    newts <- updateTournamentState (-val) ts  -- val is value to computer; -val is value for person
     play game start_state opponent newts
 
-computer_play :: Game -> Result -> Player -> TournammentState -> IO TournammentState
--- computer_play game current_result opponent ts
+computerPlay :: Game -> Result -> Player -> TournammentState -> IO TournammentState
+-- computerPlay game current_result opponent ts
 -- person has played, the computer must now play
-computer_play game (EndOfGame val  start_state) opponent ts =
+computerPlay game (EndOfGame val  start_state) opponent ts =
    do
-      newts <- update_tournament_state val ts
+      newts <- updateTournamentState val ts
       play game start_state opponent newts
 
-computer_play game (ContinueGame state) opponent ts =
+computerPlay game (ContinueGame state) opponent ts =
       let 
           opponent_move = opponent state
         in
           do
             putStrLn ("The computer chose "++show opponent_move)
-            person_play game (game opponent_move state) opponent ts
+            personPlay game (game opponent_move state) opponent ts
 
-update_tournament_state:: Double -> TournammentState -> IO TournammentState
+updateTournamentState:: Double -> TournammentState -> IO TournammentState
 -- given value to the person, the tournament state, return the new tournament state
-update_tournament_state val (wins,losses,ties)
+updateTournamentState val (wins,losses,ties)
   | val > 0 = do
       putStrLn "You Won"
       return (wins+1,losses,ties)

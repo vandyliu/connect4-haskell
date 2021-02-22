@@ -3,4 +3,4 @@
 To Play:
 
 `:load Play`
-`play connect4 connect4_start simple_player (0,0,0)`
+`play connect4 connect4Start simplePlayer (0,0,0)`

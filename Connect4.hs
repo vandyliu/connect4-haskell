@@ -1,7 +1,5 @@
 module Connect4 where
 
-import Data.Time
-import Data.Time.Clock.POSIX
 import System.IO
 
 data State = State InternalState [Action]  -- internal_state available_actions

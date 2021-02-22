@@ -38,7 +38,7 @@ personPlay game (ContinueGame state) opponent ts =
       let State internal avail = state
       let (slots, colour, board) = internal
       printBoard board
-      putStrLn ("Choose one of "++show avail++show slots)
+      putStrLn ("Choose one of "++show avail)
       line <- getLine
       case (readMaybe line :: Maybe Action) of
         Nothing ->

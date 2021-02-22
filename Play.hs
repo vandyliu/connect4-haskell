@@ -37,9 +37,8 @@ personPlay game (ContinueGame state) opponent ts =
    do
       let State internal avail = state
       let (slots, colour, board) = internal
-      putStrLn(show board)
       printBoard board
-      putStrLn ("Choose one of "++show avail)
+      putStrLn ("Choose one of "++show avail++show slots)
       line <- getLine
       case (readMaybe line :: Maybe Action) of
         Nothing ->
@@ -53,15 +52,17 @@ personPlay game (ContinueGame state) opponent ts =
                 putStrLn ("Illegal move: "++ show action)
                 personPlay game (ContinueGame state) opponent ts
 
-personPlay game (EndOfGame val start_state) opponent ts =
+personPlay game (EndOfGame val end_board start_state) opponent ts =
   do
+    putStrLn("Game Over. Final Board.")
+    printBoard end_board
     newts <- updateTournamentState (-val) ts  -- val is value to computer; -val is value for person
     play game start_state opponent newts
 
 computerPlay :: Game -> Result -> Player -> TournammentState -> IO TournammentState
 -- computerPlay game current_result opponent ts
 -- person has played, the computer must now play
-computerPlay game (EndOfGame val  start_state) opponent ts =
+computerPlay game (EndOfGame val end_board start_state) opponent ts =
    do
       newts <- updateTournamentState val ts
       play game start_state opponent newts

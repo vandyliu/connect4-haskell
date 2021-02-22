@@ -5,7 +5,7 @@ import System.IO
 data State = State InternalState [Action]  -- internal_state available_actions
          deriving (Eq, Show)
 
-data Result = EndOfGame Double State    -- end of game: value, starting state
+data Result = EndOfGame Double [[TeamColour]] State   -- end of game: value, end board, starting state
             | ContinueGame State        -- continue with new state
          deriving (Eq, Show)
 
@@ -24,14 +24,14 @@ type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remainin
 
 connect4 :: Game
 connect4 move (State (remaining, colour, board) available_actions) 
-    | win move (remaining, colour, board)     = EndOfGame 1  connect4Start   -- agent wins
-    | remaining == 0               = EndOfGame 0  connect4Start   -- no more moves, tie
-    | otherwise                    =
+    | win move (remaining, colour, board)     = EndOfGame 1 board connect4Start   -- agent wins
+    | remaining == 0                          = EndOfGame 0 board connect4Start   -- no more moves, tie
+    | otherwise =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
                         newAvailableActions)
             where otherColour = if colour == Red then Black else Red
                   newBoard = [if move == idx then col ++ [colour] else col | (idx, col) <- zip [Action x | x <- [1..7]] board]
-                  newAvailableActions = available_actions
+                  newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, length col < 6]
 
 -- win n internalState = the agent wins if it selects a column that will leave four pieces of their colour in a line either horizontally, vertially, or diagaonlly
 win :: Action -> InternalState -> Bool
@@ -45,6 +45,7 @@ printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 
     do 
         putStrLn "============="
+        putStrLn (getRow 6 board)
         putStrLn (getRow 5 board)
         putStrLn (getRow 4 board)
         putStrLn (getRow 3 board)

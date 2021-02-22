@@ -23,13 +23,15 @@ type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remainin
 
 
 connect4 :: Game
-connect4 move (State (remaining, colour, board) available_actions) 
-    | win move (remaining, colour, board)     = EndOfGame 1 board connect4Start   -- agent wins
-    | remaining == 0                          = EndOfGame 0 board connect4Start   -- no more moves, tie
+connect4 move state
+    | win move (remaining, colour, board) = EndOfGame 1 newBoard connect4Start   -- agent wins
+    | remaining == 0 && win move (remaining, colour, board) = EndOfGame 1 newBoard connect4Start -- last move is winning move, agent wins
+    | remaining == 0 = EndOfGame 0 newBoard connect4Start   -- no more moves, tie
     | otherwise =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
                         newAvailableActions)
-            where otherColour = if colour == Red then Black else Red
+            where (State (remaining, colour, board) available_actions) = state 
+                  otherColour = if colour == Red then Black else Red
                   newBoard = [if move == idx then col ++ [colour] else col | (idx, col) <- zip [Action x | x <- [1..7]] board]
                   newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, length col < 6]
 
@@ -39,7 +41,7 @@ win (Action n) int_state = False -- TODO: determine if move leads to winning sta
 
 
 connect4Start :: State
-connect4Start = State (42, Red, [[],[],[],[],[],[],[]]) [Action n | n <- [1..7]] -- Red will Start, board is originally empty
+connect4Start = State (41, Red, [[],[],[],[],[],[],[]]) [Action n | n <- [1..7]] -- Red will Start, board is originally empty
 
 printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 

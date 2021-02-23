@@ -6,6 +6,7 @@ module Play where
 -- :load Play
 
 import Connect4
+import MiniMax
 
 import System.IO
 import Text.Read   (readMaybe)

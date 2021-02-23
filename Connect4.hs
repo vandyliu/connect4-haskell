@@ -1,11 +1,12 @@
 module Connect4 where
 
 import System.IO
+import System.Random
 import Data.List
 import System.Random
 
 data State = State InternalState [Action]  -- internal_state available_actions
-         deriving (Eq, Show)
+         deriving (Eq, Show, Ord)
 
 data Result = EndOfGame Double [[TeamColour]] State   -- end of game: value, end board, starting state
             | ContinueGame State        -- continue with new state
@@ -112,8 +113,12 @@ connect4LastPlayWin :: State
 -- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
 connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black, Empty, Empty], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
 
--- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space
+connect4State1 :: State
+-- connect4State1 goes to a board state
+connect4State1 = State (17, Red, [[Black, Red, Black],[Black, Red, Black, Red, Red],[Red, Black],[Red, Black, Red, Black, Red, Black], [Red, Black],[Black, Red, Black, Red, Red],[Black]]) [Action n | n <- [1,2,3,5,6,7]]
+
 printBoard :: [[TeamColour]] -> IO ()
+-- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space
 printBoard board = 
     do 
         putStrLn "============="

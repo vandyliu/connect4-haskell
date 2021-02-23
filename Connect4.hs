@@ -25,8 +25,8 @@ type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remainin
 
 connect4 :: Game
 connect4 move state
-    | win move (remaining, colour, board) = EndOfGame 1 newBoard connect4Start   -- agent wins
-    | remaining == 0 && win move (remaining, colour, board) = EndOfGame 1 newBoard connect4Start -- last move is winning move, agent wins
+    | win (remaining, colour, newBoard) = EndOfGame 1 newBoard connect4Start   -- agent wins
+    | remaining == 0 && win (remaining, colour, newBoard) = EndOfGame 1 newBoard connect4Start -- last move is winning move, agent wins
     | remaining == 0 = EndOfGame 0 newBoard connect4Start   -- no more moves, tie
     | otherwise =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
@@ -37,8 +37,8 @@ connect4 move state
                   newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, length col < 6]
 
 -- win n internalState = the agent wins if it selects a column that will leave four pieces of their colour in a line either horizontally, vertially, or diagaonlly
-win :: Action -> InternalState -> Bool
-win (Action n) int_state = fourVertical int_state || fourHorizontal int_state || fourDiagonal int_state
+win :: InternalState -> Bool
+win int_state = fourVertical int_state || fourHorizontal int_state || fourDiagonal int_state
 
 fourVertical :: InternalState -> Bool
 fourVertical (remaining, colour, board) = or [fourInARow col | col <- board]
@@ -48,7 +48,7 @@ fourHorizontal (remaining, colour, board) = or [fourInARow row | row <- transpos
 
 fourDiagonal :: InternalState -> Bool
 fourDiagonal (remaining, colour, board) = or [fourInARow (getDiagonalBottomLeftTopRight board col row) || fourInARow (getDiagonalTopLeftBottomRight board col row) | col <- [1..7], row <- [1..6]]  -- Could be more efficient, checks diag of every square
-0
+
 getDiagonalBottomLeftTopRight :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
 getDiagonalBottomLeftTopRight [] _ _ = []
 getDiagonalBottomLeftTopRight table colNum rowNum

@@ -100,7 +100,7 @@ getRow n (col:restCol) =
     if (n-1) < length col then
         show (col !! (n-1)) ++ " " ++ getRow n restCol
     else
-        "* " ++ getRow n restCol
+        "- " ++ getRow n restCol
 
 instance Eq TeamColour where
    c1 == c2 = show c1 == show c2

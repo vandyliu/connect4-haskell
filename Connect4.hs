@@ -1,6 +1,7 @@
 module Connect4 where
 
 import System.IO
+import Data.List
 
 data State = State InternalState [Action]  -- internal_state available_actions
          deriving (Eq, Show)
@@ -24,7 +25,7 @@ type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remainin
 
 connect4 :: Game
 connect4 move (State (remaining, colour, board) available_actions) 
-    | win move (remaining, colour, board)     = EndOfGame 1  connect4Start   -- agent wins
+    | win move (remaining, colour, newBoard)     = EndOfGame 1  connect4Start   -- agent wins
     | remaining == 0               = EndOfGame 0  connect4Start   -- no more moves, tie
     | otherwise                    =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
@@ -35,7 +36,33 @@ connect4 move (State (remaining, colour, board) available_actions)
 
 -- win n internalState = the agent wins if it selects a column that will leave four pieces of their colour in a line either horizontally, vertially, or diagaonlly
 win :: Action -> InternalState -> Bool
-win (Action n) int_state = False -- TODO: determine if move leads to winning state for current colour
+win (Action n) int_state = fourVertical int_state || fourHorizontal int_state -- TODO: determine if move leads to winning state for current colour
+
+fourVertical :: InternalState -> Bool
+fourVertical (remaining, colour, board) = or [fourInARow col | col <- board]
+
+fourHorizontal :: InternalState -> Bool
+fourHorizontal (remaining, colour, board) = or [fourInARow row | row <- transpose board]
+
+fourDiagonal :: InternalState -> Bool
+fourDiagonal (remaining, colour, board) = or [fourInARow (getDiagonal board col row) | (col, row) <- zip ([1..7] ++ (replicate 5 1)) (replicate 7 1 ++ [2..6])]
+
+a2 :: Int
+a2 = 2
+faketable = [[Red], [Red, Black], [Red, Red, Red], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Black, Black]]
+fakestate = (a2, Red, [[Red], [Red, Black], [Red, Red, Red], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Black, Black]])
+getDiagonal :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
+getDiagonal [] _ _ = []
+getDiagonal table colNum rowNum
+    | colNum > length table = []
+    | rowNum > length (table !! colIndex) = []
+    | otherwise = ((table !! colIndex) !! rowIndex) : getDiagonal table (colNum + 1) (rowNum + 1)
+        where colIndex = colNum - 1
+              rowIndex = rowNum - 1
+
+fourInARow :: [TeamColour] -> Bool
+fourInARow [] = False
+fourInARow (x:xs) = ([x,x,x] == take 3 xs) || fourInARow xs
 
 
 connect4Start :: State
@@ -45,6 +72,7 @@ printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 
     do 
         putStrLn "============="
+        putStrLn (getRow 6 board)
         putStrLn (getRow 5 board)
         putStrLn (getRow 4 board)
         putStrLn (getRow 3 board)

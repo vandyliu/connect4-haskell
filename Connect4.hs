@@ -107,27 +107,28 @@ connect4LastPlayWin :: State
 -- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
 connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
 
--- Print the board to the output, where "X" represents Red and "O" represents Black
+-- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space
 printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 
     do 
         putStrLn "============="
-        putStrLn (getRow 6 board)
-        putStrLn (getRow 5 board)
-        putStrLn (getRow 4 board)
-        putStrLn (getRow 3 board)
-        putStrLn (getRow 2 board)
-        putStrLn (getRow 1 board)
+        putStrLn (printRow 6 board)
+        putStrLn (printRow 5 board)
+        putStrLn (printRow 4 board)
+        putStrLn (printRow 3 board)
+        putStrLn (printRow 2 board)
+        putStrLn (printRow 1 board)
         putStrLn "1 2 3 4 5 6 7"
         putStrLn "============="
 
-getRow :: Int -> [[TeamColour]] -> [Char]
-getRow n [] = []
-getRow n (col:restCol) = 
+-- Given a row number and board, prints a row from the board
+printRow :: Int -> [[TeamColour]] -> [Char]
+printRow n [] = []
+printRow n (col:restCol) = 
     if (n-1) < length col then
-        show (col !! (n-1)) ++ " " ++ getRow n restCol
+        show (col !! (n-1)) ++ " " ++ printRow n restCol
     else
-        "- " ++ getRow n restCol
+        "- " ++ printRow n restCol
 
 instance Eq TeamColour where
    c1 == c2 = show c1 == show c2
@@ -148,7 +149,5 @@ simplePlayer :: Player
 -- The order is it will choose the middle one first, then whatever is closest to the middle next
 simplePlayer (State _ avail) = head [Action e | e <- [4, 3, 5, 2, 6, 1, 7],
                                                Action e `elem` avail]
-
--- Test cases
 
 

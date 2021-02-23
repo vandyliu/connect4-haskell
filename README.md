@@ -7,3 +7,5 @@ To Play:
 
 `:load Play`
 `play connect4 connect4Start simplePlayer (0,0,0)`
+
+`play connect4 connect4Start (mm_player connect4) (0,0,0)`

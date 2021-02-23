@@ -1,7 +1,6 @@
 module Connect4 where
 
 import System.IO
-import System.Random
 import Data.List
 import System.Random
 
@@ -25,6 +24,8 @@ newtype Action = Action Int
 data TeamColour = Red
                 | Black
                 | Empty
+    deriving Ord
+
 type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remaining, current colour's turn, 2d array of BoardSpace)
 
 
@@ -116,6 +117,14 @@ connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red
 connect4State1 :: State
 -- connect4State1 goes to a board state
 connect4State1 = State (17, Red, [[Black, Red, Black],[Black, Red, Black, Red, Red],[Red, Black],[Red, Black, Red, Black, Red, Black], [Red, Black],[Black, Red, Black, Red, Red],[Black]]) [Action n | n <- [1,2,3,5,6,7]]
+
+connect4State2 :: State
+-- connect4State2 goes to a board state
+connect4State2 = State (9, Red, [[Black, Black, Black, Red, Red, Red],[Red,Red,Black,Red,Black,Red],[Black],[Red,Black,Red,Black,Red,Red],[Black,Red,Black,Red,Black,Black],[Black],[Black,Red,Black,Red,Black,Red]]) [Action n | n <- [3,6]]
+
+connect4State3 :: State
+-- connect4State3 goes to a board state
+connect4State3 = State (17, Red, [[Black, Black, Black, Red, Red, Red],[Red,Red,Black],[],[Red,Black,Red,Black,Red,Red],[Black,Red,Black,Red,Black,Black],[Black],[Black,Red]]) [Action n | n <- [2,3,6,7]]
 
 printBoard :: [[TeamColour]] -> IO ()
 -- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space

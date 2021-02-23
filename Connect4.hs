@@ -38,7 +38,7 @@ connect4 move state
 
 -- win n internalState = the agent wins if it selects a column that will leave four pieces of their colour in a line either horizontally, vertially, or diagaonlly
 win :: Action -> InternalState -> Bool
-win (Action n) int_state = fourVertical int_state || fourHorizontal int_state -- TODO: determine if move leads to winning state for current colour
+win (Action n) int_state = fourVertical int_state || fourHorizontal int_state || fourDiagonal int_state
 
 fourVertical :: InternalState -> Bool
 fourVertical (remaining, colour, board) = or [fourInARow col | col <- board]
@@ -47,20 +47,25 @@ fourHorizontal :: InternalState -> Bool
 fourHorizontal (remaining, colour, board) = or [fourInARow row | row <- transpose board]
 
 fourDiagonal :: InternalState -> Bool
-fourDiagonal (remaining, colour, board) = or [fourInARow (getDiagonal board col row) | (col, row) <- zip ([1..7] ++ (replicate 5 1)) (replicate 7 1 ++ [2..6])]
-
-a2 :: Int
-a2 = 2
-faketable = [[Red], [Red, Black], [Red, Red, Red], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Black, Black]]
-fakestate = (a2, Red, [[Red], [Red, Black], [Red, Red, Red], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Red, Red, Red, Black, Black, Black], [Black, Black]])
-getDiagonal :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
-getDiagonal [] _ _ = []
-getDiagonal table colNum rowNum
-    | colNum > length table = []
-    | rowNum > length (table !! colIndex) = []
-    | otherwise = ((table !! colIndex) !! rowIndex) : getDiagonal table (colNum + 1) (rowNum + 1)
+fourDiagonal (remaining, colour, board) = or [fourInARow (getDiagonalBottomLeftTopRight board col row) || fourInARow (getDiagonalTopLeftBottomRight board col row) | col <- [1..7], row <- [1..6]]  -- Could be more efficient, checks diag of every square
+0
+getDiagonalBottomLeftTopRight :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
+getDiagonalBottomLeftTopRight [] _ _ = []
+getDiagonalBottomLeftTopRight table colNum rowNum
+    | colNum > length table || colNum < 1 = []
+    | rowNum > length (table !! colIndex) || rowNum < 1 = []
+    | otherwise = ((table !! colIndex) !! rowIndex) : getDiagonalBottomLeftTopRight table (colNum + 1) (rowNum + 1)
         where colIndex = colNum - 1
               rowIndex = rowNum - 1
+
+getDiagonalTopLeftBottomRight :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
+getDiagonalTopLeftBottomRight [] _ _ = []
+getDiagonalTopLeftBottomRight table colNum rowNum
+    | colNum > length table || colNum < 1 = []
+    | rowNum > length (table !! colIndex) || rowNum < 1 = []
+    | otherwise = ((table !! colIndex) !! rowIndex) : getDiagonalTopLeftBottomRight table (colNum + 1) (rowNum - 1)
+        where colIndex = colNum - 1
+              rowIndex = rowNum - 1              
 
 fourInARow :: [TeamColour] -> Bool
 fourInARow [] = False

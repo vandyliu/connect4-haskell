@@ -67,11 +67,11 @@ computerPlay game (EndOfGame val end_board start_state) opponent ts =
 
 computerPlay game (ContinueGame state) opponent ts =
       let 
-          opponent_move = opponent state
           State internal avail = state
           (slots, colour, board) = internal
         in
           do
+            opponent_move <- opponent state
             putStrLn ("The computer (" ++ show colour ++ ") chose " ++ show opponent_move)
             personPlay game (game opponent_move state) opponent ts
 

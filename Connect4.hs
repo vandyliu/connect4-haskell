@@ -2,6 +2,7 @@ module Connect4 where
 
 import System.IO
 import Data.List
+import System.Random
 
 data State = State InternalState [Action]  -- internal_state available_actions
          deriving (Eq, Show)
@@ -12,7 +13,7 @@ data Result = EndOfGame Double [[TeamColour]] State   -- end of game: value, end
 
 type Game = Action -> State -> Result
 
-type Player = State -> Action
+type Player = State -> IO Action
 
 ------ Connect4 Game -------
 
@@ -147,7 +148,14 @@ instance Read Action where
 simplePlayer :: Player
 -- simplePlayer has an ordering of the moves, and chooses the first one available
 -- The order is it will choose the middle one first, then whatever is closest to the middle next
-simplePlayer (State _ avail) = head [Action e | e <- [4, 3, 5, 2, 6, 1, 7],
-                                               Action e `elem` avail]
+simplePlayer (State _ avail) = do
+     return (head [Action e | e <- [4, 3, 5, 2, 6, 1, 7],  Action e `elem` avail])
 
+randomPlayer :: Player
+-- randomPlayer randomly selects one action from the available moves
+randomPlayer (State _ avail) = pickRandomAction [Action e | e <- [1..7], Action e `elem` avail]
 
+pickRandomAction :: [Action] -> IO Action
+pickRandomAction availActions = do
+    pickIndex <- randomRIO (0, length availActions - 1)
+    return (availActions !! pickIndex)

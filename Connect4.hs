@@ -26,7 +26,6 @@ type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remainin
 connect4 :: Game
 connect4 move state
     | win (remaining, colour, newBoard) = EndOfGame 1 newBoard connect4Start   -- agent wins
-    | remaining == 0 && win (remaining, colour, newBoard) = EndOfGame 1 newBoard connect4Start -- last move is winning move, agent wins
     | remaining == 0 = EndOfGame 0 newBoard connect4Start   -- no more moves, tie
     | otherwise =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
@@ -71,9 +70,16 @@ fourInARow :: [TeamColour] -> Bool
 fourInARow [] = False
 fourInARow (x:xs) = ([x,x,x] == take 3 xs) || fourInARow xs
 
-
 connect4Start :: State
 connect4Start = State (41, Red, [[],[],[],[],[],[],[]]) [Action n | n <- [1..7]] -- Red will Start, board is originally empty
+
+connect4LastPlayDraw :: State
+-- connect4LastPlayDraw goes straight to a state of the game where there will certainly be a draw
+connect4LastPlayDraw = State (1, Red, [[Black, Black, Black, Red], [Red, Red, Red, Black, Red, Black], [Black, Red, Black, Black, Black, Red], [Black, Red, Black, Black, Black, Red], [Red, Black, Red, Red, Red, Black], [Red, Red, Black, Red, Black, Black], [Red, Red, Black, Red, Black, Red]]) [Action n | n <- [1]]
+
+connect4LastPlayWin :: State
+-- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
+connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
 
 printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 
@@ -94,13 +100,13 @@ getRow n (col:restCol) =
     if (n-1) < length col then
         show (col !! (n-1)) ++ " " ++ getRow n restCol
     else
-        "* " ++ getRow n restCol
+        "- " ++ getRow n restCol
 
 instance Eq TeamColour where
    c1 == c2 = show c1 == show c2
 instance Show TeamColour where
-   show Red = "R"
-   show Black = "B"
+   show Red = "X"
+   show Black = "O"
 instance Show Action where
     show (Action i) = show i
 instance Read Action where

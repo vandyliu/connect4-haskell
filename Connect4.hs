@@ -15,7 +15,9 @@ type Game = Action -> State -> Result
 type Player = State -> Action
 
 ------ Connect4 Game -------
-newtype Action = Action Int                 -- a move for a player is just an Int
+
+-- an action for a player is an Int, representing the column number between 1-7 to place a piece
+newtype Action = Action Int
          deriving (Ord,Eq)
 
 data TeamColour = Red
@@ -23,32 +25,45 @@ data TeamColour = Red
 type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remaining, current colour's turn, 2d array of BoardSpace)
 
 
+-- Update the board with the given action, then check:
+-- if the board contains four in a row, the current agent wins
+-- if the board has no more available moves (and no agent has won), game is a tie 
+-- otherwise continue the game with the new board, and the opposite colour's move
 connect4 :: Game
 connect4 move state
-    | win (remaining, colour, newBoard) = EndOfGame 1 newBoard connect4Start   -- agent wins
-    | remaining == 0 = EndOfGame 0 newBoard connect4Start   -- no more moves, tie
+    | win newBoard = EndOfGame 1 newBoard connect4Start
+    | remaining == 0 = EndOfGame 0 newBoard connect4Start
     | otherwise =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
                         newAvailableActions)
             where (State (remaining, colour, board) available_actions) = state 
                   otherColour = if colour == Red then Black else Red
-                  newBoard = [if move == idx then col ++ [colour] else col | (idx, col) <- zip [Action x | x <- [1..7]] board]
-                  newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, length col < 6]
+                  newBoard = [if move == idx then col ++ [colour] else col | (idx, col) <- zip [Action x | x <- [1..7]] board]  -- update the board by adding the new piece to the correct column
+                  newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, length col < 6]   -- only keep column numbers that have an empty space 
 
--- win n internalState = the agent wins if it selects a column that will leave four pieces of their colour in a line either horizontally, vertially, or diagaonlly
-win :: InternalState -> Bool
-win int_state = fourVertical int_state || fourHorizontal int_state || fourDiagonal int_state
+-- win [[TeamColour]] = given a board, determines if four pieces of the same colour in a line either horizontally, vertially, or diagaonlly
+win :: [[TeamColour]] -> Bool
+win board = fourVertical board || fourHorizontal board || fourDiagonal board
 
-fourVertical :: InternalState -> Bool
-fourVertical (remaining, colour, board) = or [fourInARow col | col <- board]
+-- Given a board, checks if a column contains four consecutive elements of the same TeamColour
+fourVertical :: [[TeamColour]] -> Bool
+fourVertical board = or [fourInARow col | col <- board]
 
-fourHorizontal :: InternalState -> Bool
-fourHorizontal (remaining, colour, board) = or [fourInARow row | row <- transpose board]
+-- Given a board, checks if a row contains four consecutive elements of the same TeamColour
+fourHorizontal :: [[TeamColour]] -> Bool
+fourHorizontal board = or [fourInARow row | row <- transpose board]
 
-fourDiagonal :: InternalState -> Bool
-fourDiagonal (remaining, colour, board) = or [fourInARow (getDiagonalBottomLeftTopRight board col row) || fourInARow (getDiagonalTopLeftBottomRight board col row) | col <- [1..7], row <- [1..6]]  -- Could be more efficient, checks diag of every square
+-- Given a board, checks every square if there is a diagonal with four consecutive elements of the same TeamColour
+fourDiagonal :: [[TeamColour]] -> Bool
+fourDiagonal board = or [fourInARow (getDiagonalBottomLeftTopRight board col row) || fourInARow (getDiagonalTopLeftBottomRight board col row) | col <- [1..7], row <- [1..6]]
 
-getDiagonalBottomLeftTopRight :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
+-- Given a board, and starting position (column #, row #), returns a list of TeamColour spots on the diagonal going up and to the right.
+-- Stops at any empty space even if spots are filled further in the diagonal
+---- exBoard = [[Black, Black, Black, Red], [Red, Red, Red], [],  [Black, Red, Red, Red], [Red, Black, Red], [Red, Black], [Red, Red, Black]]
+---- getDiagonalBottomLeftTopRight exBoard 2 1 = [Red]
+---- getDiagonalBottomLeftTopRight exBoard 5 1 = [Red, Black, Black]
+---- getDiagonalBottomLeftTopRight exBoard 3 1 = []
+getDiagonalBottomLeftTopRight :: [[TeamColour]] -> Int -> Int -> [TeamColour]
 getDiagonalBottomLeftTopRight [] _ _ = []
 getDiagonalBottomLeftTopRight table colNum rowNum
     | colNum > length table || colNum < 1 = []
@@ -57,7 +72,13 @@ getDiagonalBottomLeftTopRight table colNum rowNum
         where colIndex = colNum - 1
               rowIndex = rowNum - 1
 
-getDiagonalTopLeftBottomRight :: [[TeamColour]] -> Int -> Int -> [TeamColour] -- state -> col # -> row # -> diagonal starting from bottom left to top right given coordinates
+-- Given a board, and starting position (column #, row #), returns a list of TeamColour spots on the diagonal going down and to the right.
+-- Stops at any empty space even if spots are filled further in the diagonal
+---- exBoard = [[Black, Black, Black, Red], [Red, Red, Red], [],  [Black, Red, Red, Red], [Red, Black, Red], [Red, Black], [Red, Red, Black]]
+---- getDiagonalTopLeftBottomRight exBoard 1 4 = [Red, Red]
+---- getDiagonalTopLeftBottomRight exBoard 4 4 = [Red, Red, Black, Red]
+---- getDiagonalTopLeftBottomRight exBoard 6 3 = []
+getDiagonalTopLeftBottomRight :: [[TeamColour]] -> Int -> Int -> [TeamColour]
 getDiagonalTopLeftBottomRight [] _ _ = []
 getDiagonalTopLeftBottomRight table colNum rowNum
     | colNum > length table || colNum < 1 = []
@@ -66,12 +87,17 @@ getDiagonalTopLeftBottomRight table colNum rowNum
         where colIndex = colNum - 1
               rowIndex = rowNum - 1              
 
-fourInARow :: [TeamColour] -> Bool
+-- Given a list, return true if four consecutive elements are equal
+---- fourInARow [Black,Red,Red,Red,Red,Black] = True
+---- fourInARow [Red,Red,Red] = False
+---- fourInARow [Red,Black,Red,Red,Red] = False
+fourInARow :: Eq a => [a] -> Bool
 fourInARow [] = False
 fourInARow (x:xs) = ([x,x,x] == take 3 xs) || fourInARow xs
 
+-- Basic start state. Red will Start, board is originally empty
 connect4Start :: State
-connect4Start = State (41, Red, [[],[],[],[],[],[],[]]) [Action n | n <- [1..7]] -- Red will Start, board is originally empty
+connect4Start = State (41, Red, [[],[],[],[],[],[],[]]) [Action n | n <- [1..7]]
 
 connect4LastPlayDraw :: State
 -- connect4LastPlayDraw goes straight to a state of the game where there will certainly be a draw
@@ -81,6 +107,7 @@ connect4LastPlayWin :: State
 -- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
 connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
 
+-- Print the board to the output, where "X" represents Red and "O" represents Black
 printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 
     do 

@@ -23,6 +23,7 @@ newtype Action = Action Int
 
 data TeamColour = Red
                 | Black
+                | Empty
 type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remaining, current colour's turn, 2d array of BoardSpace)
 
 
@@ -39,8 +40,13 @@ connect4 move state
                         newAvailableActions)
             where (State (remaining, colour, board) available_actions) = state 
                   otherColour = if colour == Red then Black else Red
-                  newBoard = [if move == idx then col ++ [colour] else col | (idx, col) <- zip [Action x | x <- [1..7]] board]  -- update the board by adding the new piece to the correct column
-                  newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, length col < 6]   -- only keep column numbers that have an empty space 
+                  newBoard = [if move == idx then placeMarkerOntoFirstEmptySpot col colour else col | (idx, col) <- zip [Action x | x <- [1..7]] board]  -- update the board by adding the new piece to the correct column
+                  newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, [] /= (filter (== Empty)col)]   -- only keep column numbers that have an empty space 
+
+placeMarkerOntoFirstEmptySpot :: [TeamColour] -> TeamColour -> [TeamColour]
+placeMarkerOntoFirstEmptySpot [] marker = []
+placeMarkerOntoFirstEmptySpot (x:xs) marker = 
+    if x == Empty then marker:xs else [x] ++ placeMarkerOntoFirstEmptySpot xs marker
 
 -- win [[TeamColour]] = given a board, determines if four pieces of the same colour in a line either horizontally, vertially, or diagaonlly
 win :: [[TeamColour]] -> Bool
@@ -92,21 +98,21 @@ getDiagonalTopLeftBottomRight table colNum rowNum
 ---- fourInARow [Black,Red,Red,Red,Red,Black] = True
 ---- fourInARow [Red,Red,Red] = False
 ---- fourInARow [Red,Black,Red,Red,Red] = False
-fourInARow :: Eq a => [a] -> Bool
+fourInARow :: [TeamColour] -> Bool
 fourInARow [] = False
-fourInARow (x:xs) = ([x,x,x] == take 3 xs) || fourInARow xs
+fourInARow (x:xs) = if x == Empty then False else ([x,x,x] == take 3 xs) || fourInARow xs
 
 -- Basic start state. Red will Start, board is originally empty
 connect4Start :: State
-connect4Start = State (41, Red, [[],[],[],[],[],[],[]]) [Action n | n <- [1..7]]
+connect4Start = State (41, Red, [[Empty | _ <- [1..7]] | _ <- [1..7]]) [Action n | n <- [1..7]]
 
 connect4LastPlayDraw :: State
 -- connect4LastPlayDraw goes straight to a state of the game where there will certainly be a draw
-connect4LastPlayDraw = State (1, Red, [[Black, Black, Black, Red], [Red, Red, Red, Black, Red, Black], [Black, Red, Black, Black, Black, Red], [Black, Red, Black, Black, Black, Red], [Red, Black, Red, Red, Red, Black], [Red, Red, Black, Red, Black, Black], [Red, Red, Black, Red, Black, Red]]) [Action n | n <- [1]]
+connect4LastPlayDraw = State (1, Red, [[Black, Black, Black, Red, Empty, Empty], [Red, Red, Red, Black, Red, Black], [Black, Red, Black, Black, Black, Red], [Black, Red, Black, Black, Black, Red], [Red, Black, Red, Red, Red, Black], [Red, Red, Black, Red, Black, Black], [Red, Red, Black, Red, Black, Red]]) [Action n | n <- [1]]
 
 connect4LastPlayWin :: State
 -- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
-connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
+connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black, Empty, Empty], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
 
 -- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space
 printBoard :: [[TeamColour]] -> IO ()
@@ -125,17 +131,14 @@ printBoard board =
 -- Given a row number and board, prints a row from the board
 printRow :: Int -> [[TeamColour]] -> [Char]
 printRow n [] = []
-printRow n (col:restCol) = 
-    if (n-1) < length col then
-        show (col !! (n-1)) ++ " " ++ printRow n restCol
-    else
-        "- " ++ printRow n restCol
+printRow n (col:restCol) = show (col !! (n-1)) ++ " " ++ printRow n restCol
 
 instance Eq TeamColour where
    c1 == c2 = show c1 == show c2
 instance Show TeamColour where
    show Red = "X"
    show Black = "O"
+   show Empty = "-"
 instance Show Action where
     show (Action i) = show i
 instance Read Action where

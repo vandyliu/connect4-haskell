@@ -102,7 +102,7 @@ fourInARow (x:xs) = (x /= Empty && ([x,x,x] == take 3 xs)) || fourInARow xs
 
 -- Basic start state. Red will Start, board is originally empty
 connect4Start :: State
-connect4Start = State (41, Red, [[Empty | _ <- [1..7]] | _ <- [1..7]]) [Action n | n <- [1..7]]
+connect4Start = State (41, Red, [[Empty | _ <- [1..6]] | _ <- [1..7]]) [Action n | n <- [1..7]]
 
 connect4LastPlayDraw :: State
 -- connect4LastPlayDraw goes straight to a state of the game where there will certainly be a draw

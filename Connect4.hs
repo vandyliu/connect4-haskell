@@ -143,7 +143,7 @@ instance Read Action where
 
 
 
-------- A Player -------
+------- Players -------
 
 simplePlayer :: Player
 -- simplePlayer has an ordering of the moves, and chooses the first one available
@@ -159,3 +159,35 @@ pickRandomAction :: [Action] -> IO Action
 pickRandomAction availActions = do
     pickIndex <- randomRIO (0, length availActions - 1)
     return (availActions !! pickIndex)
+
+monteCarloPlayer :: Game -> Player
+-- monteCarloPlayer plays out each move X times by selecting random moves until completion, and selects the best outcome.
+monteCarloPlayer game state = do
+    return (fst (mc game state))
+
+mc:: Game -> State -> (Action, IO Double)
+-- minimax game state   =>  (move,value_to_player)
+-- precondition: there are some moves that are available
+mc game st  =
+      argmax (mcAction game st) avail
+      where State _ avail = st
+
+mcAction:: Game -> State -> Action -> IO Double
+mcAction game st act = mcActionResult game (game act st)
+
+-- result of mc, either end of game, or make random move and get result
+mcActionResult:: Game -> Result -> IO Double
+mcActionResult _  (EndOfGame val _ _) = return val
+mcActionResult game (ContinueGame state) = do
+    action <- pickRandomAction available_actions
+    return mcActionResult game (game action state)
+    where (State (remaining, colour, board) available_actions) = state 
+
+argmax :: Ord v => (e -> v) -> [e] -> (e,v)
+argmax f [e] = (e, f e)
+argmax f (h:t) 
+   | fh > ft = (h,fh)
+   | otherwise = (bt, ft)
+   where
+      (bt,ft) = argmax f t
+      fh = f h

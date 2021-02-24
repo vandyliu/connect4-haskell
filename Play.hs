@@ -102,3 +102,6 @@ updateTournamentState val (wins,losses,ties)
 -- If you imported CountGameNew here and in Minimax_mem try:
 -- let (cg, ss) = createCountGame 20 [1,2,3,5,7] in play cg ss (simple_count_player 20 [1,2,3,5,7]) (0,0,0)
 -- let (cg, ss) = createCountGame 20 [1,2,3,5,7] in play cg ss (mm_player cg) (0,0,0)
+
+start :: IO TournamentState
+start = play connect4 connect4Start simplePlayer (0,0,0)

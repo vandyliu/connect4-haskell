@@ -80,7 +80,9 @@ let (cg, is) = createCountGame 101 [3,5,13,17,37] in minimax cg is emptyDict
 -- stats (snd it)
 
 mm_player:: Game -> Player
-mm_player game state = fst (fst ( minimax game state emptyDict))
+mm_player game state = do
+    let action = fst (fst ( minimax game state emptyDict))
+    return action
 
 {-
 

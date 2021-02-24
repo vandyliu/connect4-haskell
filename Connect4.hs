@@ -118,19 +118,19 @@ connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red
 
 connect4State1 :: State
 -- connect4State1 goes to a board state
-connect4State1 = State (17, Red, [[Black, Red, Black],[Black, Red, Black, Red, Red],[Red, Black],[Red, Black, Red, Black, Red, Black], [Red, Black],[Black, Red, Black, Red, Red],[Black]]) [Action n | n <- [1,2,3,5,6,7]]
+connect4State1 = State (17, Red, [[Black, Red, Black, Empty, Empty, Empty],[Black, Red, Black, Red, Red, Empty],[Red, Black, Empty, Empty, Empty, Empty],[Red, Black, Red, Black, Red, Black], [Red, Black, Empty, Empty, Empty, Empty],[Black, Red, Black, Red, Red, Empty],[Black, Empty, Empty, Empty, Empty, Empty]]) [Action n | n <- [1,2,3,5,6,7]]
 
 connect4State2 :: State
 -- connect4State2 goes to a board state
-connect4State2 = State (9, Red, [[Black, Black, Black, Red, Red, Red],[Red,Red,Black,Red,Black,Red],[Black],[Red,Black,Red,Black,Red,Red],[Black,Red,Black,Red,Black,Black],[Black],[Black,Red,Black,Red,Black,Red]]) [Action n | n <- [3,6]]
+connect4State2 = State (9, Red, [[Black, Black, Black, Red, Red, Red],[Red,Red,Black,Red,Black,Red],[Black, Empty, Empty, Empty, Empty, Empty],[Red,Black,Red,Black,Red,Red],[Black,Red,Black,Red,Black,Black],[Black, Empty, Empty, Empty, Empty, Empty],[Black,Red,Black,Red,Black,Red]]) [Action n | n <- [3,6]]
 
 connect4State3 :: State
 -- connect4State3 goes to a board state
-connect4State3 = State (17, Red, [[Black, Black, Black, Red, Red, Red],[Red,Red,Black],[],[Red,Black,Red,Black,Red,Red],[Black,Red,Black,Red,Black,Black],[Black],[Black,Red]]) [Action n | n <- [2,3,6,7]]
+connect4State3 = State (17, Red, [[Black, Black, Black, Red, Red, Red],[Red,Red,Black, Empty, Empty, Empty],[Empty, Empty, Empty, Empty, Empty, Empty],[Red,Black,Red,Black,Red,Red],[Black,Red,Black,Red,Black,Black],[Black, Empty, Empty, Empty, Empty, Empty],[Black,Red, Empty, Empty, Empty, Empty]]) [Action n | n <- [2,3,6,7]]
 
 connect4State4 :: State
 -- connect4State4 goes to a board state
-connect4State4 = State (9, Red, [[Black, Red, Red, Black],[Red,Red,Black,Red,Red,Black],[],[Red,Black,Red,Black,Red,Black],[Black,Red,Black,Red,Black,Black],[Red,Black,Black,Red],[Red,Black,Red,Black,Red,Black]]) [Action n | n <- [1,3,6]]
+connect4State4 = State (13, Red, [[Black, Red, Empty, Empty, Empty, Empty],[Red,Red,Black,Red,Red,Black],[Empty, Empty, Empty, Empty, Empty, Empty],[Red,Black,Red,Black,Red,Black],[Black,Red,Black,Red,Black,Black],[Red,Black,Black,Red, Empty, Empty],[Red,Black,Red,Black,Empty,Empty]]) [Action n | n <- [1,3,6,7]]
 
 printBoard :: [[TeamColour]] -> IO ()
 -- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space
@@ -274,14 +274,14 @@ mmPlayerHybrid :: Player
 mmPlayerHybrid st = 
     let State is avail = st
         (movesLeft, _, _) = is 
-    in if length avail < 3 then mmPlayer st else randomPlayer st
+    in if length avail < 4 then mmPlayer st else randomPlayer st
 -- Needs to be tested more after win function is complete
 
 -- Should create heuristic
 
 
 
-decentPlayer :: Player
+-- decentPlayer :: Player
 -- check if any action leads to win
 -- check if any action for opponent leads to win and block it
 -- check if action leads to a play that will lead to a win

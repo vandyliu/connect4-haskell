@@ -62,14 +62,13 @@ fourHorizontal board = or [fourInARow row | row <- transpose board]
 
 -- Given a board, checks every square if there is a diagonal with four consecutive elements of the same TeamColour
 fourDiagonal :: [[TeamColour]] -> Bool
-fourDiagonal board = or [fourInARow (getDiagonalBottomLeftTopRight board col row) || fourInARow (getDiagonalTopLeftBottomRight board col row) | col <- [1..7], row <- [1..6]]
+fourDiagonal board = (or [fourInARow (getDiagonalBottomLeftTopRight board col row) | (col,row) <- zip (replicate 6 1 ++ [2..7]) ([1..6] ++ replicate 6 1) ]) ||
+                    (or [fourInARow (getDiagonalTopLeftBottomRight board col row) | (col,row) <- zip (replicate 6 1 ++ [2..7]) ([1..6] ++ replicate 6 6) ])
 
 -- Given a board, and starting position (column #, row #), returns a list of TeamColour spots on the diagonal going up and to the right.
--- Stops at any empty space even if spots are filled further in the diagonal
----- exBoard = [[Black, Black, Black, Red], [Red, Red, Red], [],  [Black, Red, Red, Red], [Red, Black, Red], [Red, Black], [Red, Red, Black]]
----- getDiagonalBottomLeftTopRight exBoard 2 1 = [Red]
----- getDiagonalBottomLeftTopRight exBoard 5 1 = [Red, Black, Black]
----- getDiagonalBottomLeftTopRight exBoard 3 1 = []
+---- exBoard = [[Black, Black, Black, Red, Empty, Empty], [Red, Red, Red, Empty, Empty, Empty], [Empty, Empty, Empty, Empty, Empty, Empty],  [Black, Red, Red, Red, Empty, Empty], [Red, Black, Red, Empty, Empty, Empty], [Red, Black, Empty, Empty, Empty, Empty], [Red, Red, Black, Empty, Empty, Empty]]
+---- getDiagonalBottomLeftTopRight exBoard 2 1 = [Red, Empty, Red, Empty, Empty, Empty]
+---- getDiagonalBottomLeftTopRight exBoard 7 6 = [Empty]
 getDiagonalBottomLeftTopRight :: [[TeamColour]] -> Int -> Int -> [TeamColour]
 getDiagonalBottomLeftTopRight [] _ _ = []
 getDiagonalBottomLeftTopRight table colNum rowNum
@@ -80,11 +79,10 @@ getDiagonalBottomLeftTopRight table colNum rowNum
               rowIndex = rowNum - 1
 
 -- Given a board, and starting position (column #, row #), returns a list of TeamColour spots on the diagonal going down and to the right.
--- Stops at any empty space even if spots are filled further in the diagonal
----- exBoard = [[Black, Black, Black, Red], [Red, Red, Red], [],  [Black, Red, Red, Red], [Red, Black, Red], [Red, Black], [Red, Red, Black]]
----- getDiagonalTopLeftBottomRight exBoard 1 4 = [Red, Red]
----- getDiagonalTopLeftBottomRight exBoard 4 4 = [Red, Red, Black, Red]
----- getDiagonalTopLeftBottomRight exBoard 6 3 = []
+---- exBoard = [[Black, Black, Black, Red, Empty, Empty], [Red, Red, Red, Empty, Empty, Empty], [Empty, Empty, Empty, Empty, Empty, Empty],  [Black, Red, Red, Red, Empty, Empty], [Red, Black, Red, Empty, Empty, Empty], [Red, Black, Empty, Empty, Empty, Empty], [Red, Red, Black, Empty, Empty, Empty]]
+---- getDiagonalTopLeftBottomRight exBoard 1 4 = [Red, Red, Empty Black]
+---- getDiagonalTopLeftBottomRight exBoard 2 6 = [Empty, Empty, Red, Red, Black, Red]
+---- getDiagonalTopLeftBottomRight exBoard 6 3 = [Empty, X]
 getDiagonalTopLeftBottomRight :: [[TeamColour]] -> Int -> Int -> [TeamColour]
 getDiagonalTopLeftBottomRight [] _ _ = []
 getDiagonalTopLeftBottomRight table colNum rowNum
@@ -95,12 +93,12 @@ getDiagonalTopLeftBottomRight table colNum rowNum
               rowIndex = rowNum - 1              
 
 -- Given a list, return true if four consecutive elements are equal
----- fourInARow [Black,Red,Red,Red,Red,Black] = True
+---- fourInARow [Empty,Red,Red,Red,Red,Black] = True
 ---- fourInARow [Red,Red,Red] = False
----- fourInARow [Red,Black,Red,Red,Red] = False
+---- fourInARow [Red,Empty,Red,Red,Red] = False
 fourInARow :: [TeamColour] -> Bool
 fourInARow [] = False
-fourInARow (x:xs) = if x == Empty then False else ([x,x,x] == take 3 xs) || fourInARow xs
+fourInARow (x:xs) = (x /= Empty && ([x,x,x] == take 3 xs)) || fourInARow xs
 
 -- Basic start state. Red will Start, board is originally empty
 connect4Start :: State

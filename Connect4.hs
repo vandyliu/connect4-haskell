@@ -161,34 +161,47 @@ pickRandomAction availActions = do
     pickIndex <- randomRIO (0, length availActions - 1)
     return (availActions !! pickIndex)
 
-monteCarloPlayer :: Game -> Player
--- monteCarloPlayer plays out each move X times by selecting random moves until completion, and selects the best outcome.
-monteCarloPlayer game state = do
-    return (fst (mc game state))
+-- monteCarloPlayer plays out each move X times by selecting random moves until completion, and selects the best outcome. (Currently only checks if game end in win or loss)
+monteCarloPlayer ::  Integer -> Player
+monteCarloPlayer numGames state = do
+    actionValuePair <- mc connect4 state numGames
+    return (fst actionValuePair)
 
-mc:: Game -> State -> (Action, IO Double)
--- minimax game state   =>  (move,value_to_player)
--- precondition: there are some moves that are available
-mc game st  =
-      argmax (mcAction game st) avail
-      where State _ avail = st
+-- For each action, play out X games and return the pair with the highest expected value (most wins)
+mc:: Game -> State -> Integer -> IO (Action, Double)
+mc game st numGames = do
+    actionValuePairs <- getIOValues [ mcPlayOutXGames game st action numGames | action <- avail]
+    putStrLn (show actionValuePairs)
+    return (argmax actionValuePairs)
+    where State _ avail = st
 
-mcAction:: Game -> State -> Action -> IO Double
-mcAction game st act = mcActionResult game (game act st)
+-- Play out X games and return a pair with the action and sum of the results
+mcPlayOutXGames :: Game -> State -> Action -> Integer -> IO (Action, Double)
+mcPlayOutXGames game st action numGames = do
+    runs <- getIOValues ([ mcActionResult game (game action st) | run <- [1..numGames]])
+    return (action, sum runs)
 
--- result of mc, either end of game, or make random move and get result
+-- Return the value of the resulting game. If game is not over, make a random move until the game is over and return the value.
 mcActionResult:: Game -> Result -> IO Double
 mcActionResult _  (EndOfGame val _ _) = return val
 mcActionResult game (ContinueGame state) = do
     action <- pickRandomAction available_actions
-    return mcActionResult game (game action state)
+    nextResult <- (mcActionResult game (game action state))
+    return  (- nextResult)
     where (State (remaining, colour, board) available_actions) = state 
+ 
+getIOValues :: [IO a] -> IO [a]
+getIOValues [] = pure []
+getIOValues (h:t) = do
+    x <- h
+    xs <- sequence t
+    return (x:xs)
 
-argmax :: Ord v => (e -> v) -> [e] -> (e,v)
-argmax f [e] = (e, f e)
-argmax f (h:t) 
-   | fh > ft = (h,fh)
-   | otherwise = (bt, ft)
+argmax :: Ord v => [(e,v)] -> (e,v)
+argmax [(e,v)] = (e, v)
+argmax (h:t) 
+   | vh > vt = h
+   | otherwise = (bt,vt)
    where
-      (bt,ft) = argmax f t
-      fh = f h
+      (bt,vt) = argmax t
+      vh = snd h

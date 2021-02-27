@@ -53,7 +53,7 @@ getIOValues :: [IO a] -> IO [a]
 getIOValues [] = pure []
 getIOValues (h:t) = do
     x <- h
-    xs <- sequence t
+    xs <- getIOValues t
     return (x:xs)
 
 -- Given a list of pairs, return the pair with the highest value (second value of pair)

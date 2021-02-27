@@ -171,7 +171,6 @@ monteCarloPlayer numGames state = do
 mc:: Game -> State -> Integer -> IO (Action, Double)
 mc game st numGames = do
     actionValuePairs <- getIOValues [ mcPlayOutXGames game st action numGames | action <- avail]
-    putStrLn (show actionValuePairs)
     return (argmax actionValuePairs)
     where State _ avail = st
 

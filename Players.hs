@@ -84,7 +84,7 @@ minimax game st mem =
       Just act_val  -> (act_val,mem)
       Nothing ->
         let (act_val,mem1) =
-              argmax_mem (valueact game st) avail mem
+              argmaxMem (valueact game st) avail mem
         in (act_val, (insertval st act_val mem1))
     where State _ avail = st
 
@@ -100,16 +100,16 @@ value game (ContinueGame st) mem =
        let ((_,val), mem2) = minimax game st mem
           in  (-val,mem2)
 
--- argmax_mem f lst mem = ((e, f e),mem1) 
+-- argmaxMem f lst mem = ((e, f e),mem1) 
 --  updates the memory to mem1. Each call to f can uodate memory
-argmax_mem :: Ord v => (e -> m -> (v,m)) -> [e] -> m -> ((e,v),m)
-argmax_mem f [e] mem = ((e, v),mem1)
+argmaxMem :: Ord v => (e -> m -> (v,m)) -> [e] -> m -> ((e,v),m)
+argmaxMem f [e] mem = ((e, v),mem1)
      where (v,mem1) = f e mem
-argmax_mem f (h:t) mem
+argmaxMem f (h:t) mem
    | fh > ft = ((h,fh),mem2)
    | otherwise = ((bt, ft),mem2)
    where
-      ((bt,ft),mem1) = argmax_mem f t mem
+      ((bt,ft),mem1) = argmaxMem f t mem
       (fh,mem2) = f h mem1
 
 -- Hybrid Player --

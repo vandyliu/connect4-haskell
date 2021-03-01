@@ -1,10 +1,16 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Connect4 where
 
 import System.IO
 import Data.List
+import GHC.Generics (Generic)
+import Data.Hashable
 
 data State = State InternalState [Action]  -- internal_state available_actions
-         deriving (Eq, Show)
+         deriving (Eq, Show, Ord, Generic)
+
+instance Hashable State
 
 data Result = EndOfGame Double [[TeamColour]] State   -- end of game: value, end board, starting state
             | ContinueGame State        -- continue with new state
@@ -18,11 +24,17 @@ type Player = State -> IO Action
 
 -- an action for a player is an Int, representing the column number between 1-7 to place a piece
 newtype Action = Action Int
-         deriving (Ord,Eq)
+         deriving (Ord,Eq, Generic)
+
+instance Hashable Action
 
 data TeamColour = Red
                 | Black
                 | Empty
+                deriving (Ord, Generic)
+
+instance Hashable TeamColour
+
 type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remaining, current colour's turn, 2d array of BoardSpace)
 
 

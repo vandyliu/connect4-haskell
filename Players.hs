@@ -2,6 +2,7 @@ module Players where
 
 import Connect4
 import System.Random
+import HashTreeDict
 
 ------- Players -------
 
@@ -23,6 +24,7 @@ pickRandomAction availActions = do
 monteCarloPlayer ::  Integer -> Player
 -- monteCarloPlayer plays out each move X times by selecting random moves until completion, and selects the best outcome. (Checks if played out game ends in win or loss)
 monteCarloPlayer numGames state = do
+    putStrLn "MonteCarlo Player"
     actionValuePair <- mc connect4 state numGames
     return (fst actionValuePair)
 
@@ -65,3 +67,54 @@ argmax (h:t)
    where
       (bt,vt) = argmax t
       vh = snd h
+
+-- MiniMax Player --
+type Mem = Dict State (Action, Double)
+
+mmPlayer :: Player
+mmPlayer st = do
+    putStrLn "MiniMax Player"
+    return (fst (fst (minimax connect4 st emptyDict)))
+
+----   Determining the best move  ---
+minimax:: Game -> State -> Mem -> ((Action, Double), Mem)
+-- minimax game state memory  =>  ((move,value_to_player),new_memory)
+minimax game st mem =
+   case getval st mem of
+      Just act_val  -> (act_val,mem)
+      Nothing ->
+        let (act_val,mem1) =
+              argmaxMem (valueact game st) avail mem
+        in (act_val, (insertval st act_val mem1))
+    where State _ avail = st
+
+-- valueact game st action  is the value of doing action act in state st for game
+valueact :: Game -> State -> Action -> Mem -> (Double,Mem)
+valueact game st act = value game (game act st) 
+
+
+-- value game move result = value for current player of the state after move given result
+value:: Game -> Result -> Mem -> (Double,Mem)
+value _  (EndOfGame val _ _) mem = (val, mem)
+value game (ContinueGame st) mem =
+       let ((_,val), mem2) = minimax game st mem
+          in  (-val,mem2)
+
+-- argmaxMem f lst mem = ((e, f e),mem1) 
+--  updates the memory to mem1. Each call to f can uodate memory
+argmaxMem :: Ord v => (e -> m -> (v,m)) -> [e] -> m -> ((e,v),m)
+argmaxMem f [e] mem = ((e, v),mem1)
+     where (v,mem1) = f e mem
+argmaxMem f (h:t) mem
+   | fh > ft = ((h,fh),mem2)
+   | otherwise = ((bt, ft),mem2)
+   where
+      ((bt,ft),mem1) = argmaxMem f t mem
+      (fh,mem2) = f h mem1
+
+-- Hybrid Player --
+hybridPlayer :: Int -> Integer -> Player
+hybridPlayer mmMoves monteCarloGames st = 
+    let State is avail = st
+        (movesLeft, _, _) = is 
+    in if movesLeft < min 16 mmMoves then mmPlayer st else monteCarloPlayer monteCarloGames st

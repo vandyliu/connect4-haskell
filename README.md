@@ -1,5 +1,6 @@
 # connect4-haskell
 
+![Game](pic.png)
 ## CREDITS: 
 - Play.hs sourced from "https://www.cs.ubc.ca/~poole/cs312/2021/haskell/Play.hs", and edited to display our connect 4 game.
 - TreeDict.hs sourced from "https://www.cs.ubc.ca/~poole/cs312/2021/haskell/TreeDict.hs"

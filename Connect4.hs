@@ -29,7 +29,7 @@ newtype Action = Action Int
 instance Hashable Action
 
 data TeamColour = Red
-                | Black
+                | Yellow
                 | Empty
                 deriving (Ord, Generic)
 
@@ -50,7 +50,7 @@ connect4 move state
           ContinueGame (State (remaining - 1, otherColour, newBoard)
                         newAvailableActions)
             where (State (remaining, colour, board) available_actions) = state 
-                  otherColour = if colour == Red then Black else Red
+                  otherColour = if colour == Red then Yellow else Red
                   newBoard = [if move == idx then placeMarkerOntoFirstEmptySpot col colour else col | (idx, col) <- zip [Action x | x <- [1..7]] board]  -- update the board by adding the new piece to the correct column
                   newAvailableActions = [action | (action, col) <- zip [Action x | x <- [1..7]] newBoard, [] /= (filter (== Empty)col)]   -- only keep column numbers that have an empty space 
 
@@ -77,7 +77,7 @@ fourDiagonal board = (or [fourInARow (getDiagonalBottomLeftTopRight board col ro
                     (or [fourInARow (getDiagonalTopLeftBottomRight board col row) | (col,row) <- zip (replicate 6 1 ++ [2..7]) ([1..6] ++ replicate 6 6) ])
 
 -- Given a board, and starting position (column #, row #), returns a list of TeamColour spots on the diagonal going up and to the right.
----- exBoard = [[Black, Black, Black, Red, Empty, Empty], [Red, Red, Red, Empty, Empty, Empty], [Empty, Empty, Empty, Empty, Empty, Empty],  [Black, Red, Red, Red, Empty, Empty], [Red, Black, Red, Empty, Empty, Empty], [Red, Black, Empty, Empty, Empty, Empty], [Red, Red, Black, Empty, Empty, Empty]]
+---- exBoard = [[Yellow, Yellow, Yellow, Red, Empty, Empty], [Red, Red, Red, Empty, Empty, Empty], [Empty, Empty, Empty, Empty, Empty, Empty],  [Yellow, Red, Red, Red, Empty, Empty], [Red, Yellow, Red, Empty, Empty, Empty], [Red, Yellow, Empty, Empty, Empty, Empty], [Red, Red, Yellow, Empty, Empty, Empty]]
 ---- getDiagonalBottomLeftTopRight exBoard 2 1 = [Red, Empty, Red, Empty, Empty, Empty]
 ---- getDiagonalBottomLeftTopRight exBoard 7 6 = [Empty]
 getDiagonalBottomLeftTopRight :: [[TeamColour]] -> Int -> Int -> [TeamColour]
@@ -90,9 +90,9 @@ getDiagonalBottomLeftTopRight table colNum rowNum
               rowIndex = rowNum - 1
 
 -- Given a board, and starting position (column #, row #), returns a list of TeamColour spots on the diagonal going down and to the right.
----- exBoard = [[Black, Black, Black, Red, Empty, Empty], [Red, Red, Red, Empty, Empty, Empty], [Empty, Empty, Empty, Empty, Empty, Empty],  [Black, Red, Red, Red, Empty, Empty], [Red, Black, Red, Empty, Empty, Empty], [Red, Black, Empty, Empty, Empty, Empty], [Red, Red, Black, Empty, Empty, Empty]]
----- getDiagonalTopLeftBottomRight exBoard 1 4 = [Red, Red, Empty Black]
----- getDiagonalTopLeftBottomRight exBoard 2 6 = [Empty, Empty, Red, Red, Black, Red]
+---- exBoard = [[Yellow, Yellow, Yellow, Red, Empty, Empty], [Red, Red, Red, Empty, Empty, Empty], [Empty, Empty, Empty, Empty, Empty, Empty],  [Yellow, Red, Red, Red, Empty, Empty], [Red, Yellow, Red, Empty, Empty, Empty], [Red, Yellow, Empty, Empty, Empty, Empty], [Red, Red, Yellow, Empty, Empty, Empty]]
+---- getDiagonalTopLeftBottomRight exBoard 1 4 = [Red, Red, Empty Yellow]
+---- getDiagonalTopLeftBottomRight exBoard 2 6 = [Empty, Empty, Red, Red, Yellow, Red]
 ---- getDiagonalTopLeftBottomRight exBoard 6 3 = [Empty, X]
 getDiagonalTopLeftBottomRight :: [[TeamColour]] -> Int -> Int -> [TeamColour]
 getDiagonalTopLeftBottomRight [] _ _ = []
@@ -104,7 +104,7 @@ getDiagonalTopLeftBottomRight table colNum rowNum
               rowIndex = rowNum - 1              
 
 -- Given a list, return true if four consecutive elements are equal
----- fourInARow [Empty,Red,Red,Red,Red,Black] = True
+---- fourInARow [Empty,Red,Red,Red,Red,Yellow] = True
 ---- fourInARow [Red,Red,Red] = False
 ---- fourInARow [Red,Empty,Red,Red,Red] = False
 fourInARow :: [TeamColour] -> Bool
@@ -117,13 +117,13 @@ connect4Start = State (41, Red, [[Empty | _ <- [1..6]] | _ <- [1..7]]) [Action n
 
 connect4LastPlayDraw :: State
 -- connect4LastPlayDraw goes straight to a state of the game where there will certainly be a draw
-connect4LastPlayDraw = State (1, Red, [[Black, Black, Black, Red, Empty, Empty], [Red, Red, Red, Black, Red, Black], [Black, Red, Black, Black, Black, Red], [Black, Red, Black, Black, Black, Red], [Red, Black, Red, Red, Red, Black], [Red, Red, Black, Red, Black, Black], [Red, Red, Black, Red, Black, Red]]) [Action n | n <- [1]]
+connect4LastPlayDraw = State (1, Red, [[Yellow, Yellow, Yellow, Red, Empty, Empty], [Red, Red, Red, Yellow, Red, Yellow], [Yellow, Red, Yellow, Yellow, Yellow, Red], [Yellow, Red, Yellow, Yellow, Yellow, Red], [Red, Yellow, Red, Red, Red, Yellow], [Red, Red, Yellow, Red, Yellow, Yellow], [Red, Red, Yellow, Red, Yellow, Red]]) [Action n | n <- [1]]
 
 connect4LastPlayWin :: State
 -- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
-connect4LastPlayWin = State (1, Red, [[Black, Red, Red, Black, Red, Black], [Red, Red, Black, Red, Black, Red], [Red, Red, Black, Black, Black, Red], [Red, Black, Red, Black, Black, Black], [Black, Red, Red, Black, Empty, Empty], [Black, Red, Black, Red, Black, Red], [Black, Red, Red, Black, Red, Black]]) [Action n | n <- [5]]
+connect4LastPlayWin = State (1, Red, [[Yellow, Red, Red, Yellow, Red, Yellow], [Red, Red, Yellow, Red, Yellow, Red], [Red, Red, Yellow, Yellow, Yellow, Red], [Red, Yellow, Red, Yellow, Yellow, Yellow], [Yellow, Red, Red, Yellow, Empty, Empty], [Yellow, Red, Yellow, Red, Yellow, Red], [Yellow, Red, Red, Yellow, Red, Yellow]]) [Action n | n <- [5]]
 
--- Print the board to the output, where "X" represents Red, "O" represents Black, and "-" represents an empty space
+-- Print the board to the output, where "X" represents Red, "O" represents Yellow, and "-" represents an empty space
 printBoard :: [[TeamColour]] -> IO ()
 printBoard board = 
     do 
@@ -146,7 +146,7 @@ instance Eq TeamColour where
    c1 == c2 = show c1 == show c2
 instance Show TeamColour where
    show Red = "X"
-   show Black = "O"
+   show Yellow = "O"
    show Empty = "-"
 instance Show Action where
     show (Action i) = show i

@@ -76,6 +76,16 @@ computerPlay game (ContinueGame state) opponent ts =
             putStrLn ("The computer (" ++ show colour ++ ") chose " ++ show opponent_move)
             personPlay game (game opponent_move state) opponent ts
 
+computerMove :: Game -> Result -> Player -> Result
+computerMove game (ContinueGame state) opponent = 
+      let 
+          State internal avail = state
+          (slots, colour, board) = internal
+        in
+          do
+            opponent_move <- opponent state
+            return (connect4 opponent_move state)
+
 finishGame :: [[TeamColour]] -> Double -> TournamentState -> IO TournamentState
 finishGame end_board val (wins,losses,ties) = 
     do 

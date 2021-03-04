@@ -19,8 +19,8 @@ extra-source-files:  README.md, CHANGELOG.md
 
 executable connect4-haskell
   main-is:             Main.hs
-  other-modules:       Play, Players, Connect4
+  other-modules:       Play, Players, Connect4, HashTreeDict, TreeDict
   -- other-extensions:
-  build-depends:       base >=4.14 && <4.15, gloss, random
+  build-depends:       base >=4.14 && <4.15, gloss, random, hashable
   -- hs-source-dirs:
   default-language:    Haskell2010

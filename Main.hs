@@ -4,6 +4,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import Play
 import Connect4
+import Players
 
 -- define the window
 window = InWindow "Connect Four" (900, 900) (100, 100)
@@ -68,25 +69,21 @@ nodeAsPicture node c r
 
 -- | Respond to key events.
 -- For a '1' keypress, place marker in 1 column.
+handleKeys :: Event -> Result -> Result
 handleKeys (EventKey (Char '1') _ _ _) (ContinueGame (State is actions)) =
     if Action 1 `elem` actions then 
-        connect4 (Action 1) (State is actions)
-    else ContinueGame (State is actions)
+        computerMove connect4 (connect4 (Action 1) (State is actions)) simplePlayer
+    else
+        ContinueGame (State is actions)
 handleKeys (EventKey (Char '2') _ _ _) (ContinueGame st) =
   connect4 (Action 2) st
-handleKeys (EventKey (Char '3') _ _ _) (ContinueGame st) =
-  connect4 (Action 3) st
-handleKeys (EventKey (Char '4') _ _ _) (ContinueGame st) =
-  connect4 (Action 4) st
-handleKeys (EventKey (Char '5') _ _ _) (ContinueGame st) =
-  connect4 (Action 5) st
-handleKeys (EventKey (Char '6') _ _ _) (ContinueGame st) =
-  connect4 (Action 6) st
-handleKeys (EventKey (Char '7') _ _ _) (ContinueGame st) =
-  connect4 (Action 7) st
 
 -- Do nothing for all other events.
 handleKeys _ game = game
 
 main :: IO ()
-main = Graphics.Gloss.play window bgcolor 30 (ContinueGame connect4Start) gameAsPicture handleKeys (const id)
+main = Graphics.Gloss.playIO window bgcolor 30 (ContinueGame connect4Start) gameAsPicture handleKeys (const id)
+
+convertToIO :: Result -> IO Result 
+convertToIO res = do
+    return res

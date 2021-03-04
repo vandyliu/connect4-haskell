@@ -76,14 +76,26 @@ computerPlay game (ContinueGame state) opponent ts =
             putStrLn ("The computer (" ++ show colour ++ ") chose " ++ show opponent_move)
             personPlay game (game opponent_move state) opponent ts
 
-finishGame :: [[TeamColour]] -> Double -> TournamentState -> IO TournamentState
-finishGame end_board val (wins,losses,ties) = 
+computerMove :: Game -> Result -> Player -> IO Result
+computerMove game (EndOfGame val finishedState initialState) opponent = return (EndOfGame val finishedState initialState)
+
+computerMove game (ContinueGame state) opponent = 
+      let 
+          State internal avail = state
+          (slots, colour, board) = internal
+        in
+          do
+            opponent_move <- opponent state
+            return (connect4 opponent_move state)
+
+finishGame :: State -> Double -> TournamentState -> IO TournamentState
+finishGame (State (_, _, end_board) _) val (wins,losses,ties) = 
     do 
         putStrLn("Game Over. Final Board.")
         printBoard end_board
         updateTournamentState val (wins,losses,ties)
 
-updateTournamentState:: Double -> TournamentState -> IO TournamentState
+updateTournamentState :: Double -> TournamentState -> IO TournamentState
 -- given value to the person, the tournament state, return the new tournament state
 updateTournamentState val (wins,losses,ties)
   | val > 0 = do
@@ -95,14 +107,6 @@ updateTournamentState val (wins,losses,ties)
   | otherwise = do
       putStrLn "Computer won!"
       return (wins,losses+1,ties)
-
--- If you imported MagicSum here and in Minimax try:
--- play magicsum magicsum_start simple_player (0,0,0)
--- play magicsum magicsum_start (mm_player magicsum) (0,0,0) -- minimax player
-
--- If you imported CountGameNew here and in Minimax_mem try:
--- let (cg, ss) = createCountGame 20 [1,2,3,5,7] in play cg ss (simple_count_player 20 [1,2,3,5,7]) (0,0,0)
--- let (cg, ss) = createCountGame 20 [1,2,3,5,7] in play cg ss (mm_player cg) (0,0,0)
 
 start :: IO TournamentState
 start = play connect4 connect4Start simplePlayer (0,0,0)

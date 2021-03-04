@@ -16,12 +16,13 @@ randomPlayer :: Player
 -- randomPlayer randomly selects one action from the available moves
 randomPlayer (State _ avail) = pickRandomAction [Action e | e <- [1..7], Action e `elem` avail]
 
+-- pickRandomAction picks a random action from the list of available actions
 pickRandomAction :: [Action] -> IO Action
 pickRandomAction availActions = do
     pickIndex <- randomRIO (0, length availActions - 1)
     return (availActions !! pickIndex)
 
-monteCarloPlayer ::  Integer -> Player
+monteCarloPlayer :: Integer -> Player
 -- monteCarloPlayer plays out each move X times by selecting random moves until completion, and selects the best outcome. (Checks if played out game ends in win or loss)
 monteCarloPlayer numGames state = do
     putStrLn "MonteCarlo Player"
@@ -32,6 +33,7 @@ monteCarloPlayer numGames state = do
 mc:: Game -> State -> Integer -> IO (Action, Double)
 mc game st numGames = do
     actionValuePairs <- getIOValues [ mcPlayOutXGames game st action numGames | action <- avail]
+    putStrLn ("Scores: " ++ show actionValuePairs)
     return (argmax actionValuePairs)
     where State _ avail = st
 
@@ -74,7 +76,9 @@ type Mem = Dict State (Action, Double)
 mmPlayer :: Player
 mmPlayer st = do
     putStrLn "MiniMax Player"
-    return (fst (fst (minimax connect4 st emptyDict)))
+    putStrLn ("Move value: " ++ show val)
+    return act
+    where (act, val) = fst (minimax connect4 st emptyDict)
 
 ----   Determining the best move  ---
 minimax:: Game -> State -> Mem -> ((Action, Double), Mem)
@@ -92,10 +96,15 @@ minimax game st mem =
 valueact :: Game -> State -> Action -> Mem -> (Double,Mem)
 valueact game st act = value game (game act st) 
 
-
 -- value game move result = value for current player of the state after move given result
-value:: Game -> Result -> Mem -> (Double,Mem)
-value _  (EndOfGame val _ _) mem = (val, mem)
+-- for value winning quickly > winning slowly > losing slowly > losing quickly
+-- Example below:
+-- Win quickly then you get 1 + (35/42) = 1 and 35/42
+-- win slowly then you get 1 + (3/42) = 1 and 3/42
+-- lose slowly then you get -1 - (3/42) = -1 and 3/42
+-- lost quickly then you get -1 - (35/42) = -1 and 35/42
+value :: Game -> Result -> Mem -> (Double, Mem)
+value _  (EndOfGame val (State (movesLeft,_,_) _) _) mem = (val + (val * (fromIntegral movesLeft / 42)), mem)
 value game (ContinueGame st) mem =
        let ((_,val), mem2) = minimax game st mem
           in  (-val,mem2)
@@ -117,4 +126,4 @@ hybridPlayer :: Int -> Integer -> Player
 hybridPlayer mmMoves monteCarloGames st = 
     let State is avail = st
         (movesLeft, _, _) = is 
-    in if movesLeft < min 16 mmMoves then mmPlayer st else monteCarloPlayer monteCarloGames st
+    in if movesLeft < mmMoves then mmPlayer st else monteCarloPlayer monteCarloGames st

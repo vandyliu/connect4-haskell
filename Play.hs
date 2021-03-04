@@ -76,7 +76,9 @@ computerPlay game (ContinueGame state) opponent ts =
             putStrLn ("The computer (" ++ show colour ++ ") chose " ++ show opponent_move)
             personPlay game (game opponent_move state) opponent ts
 
-computerMove :: Game -> Result -> Player -> Result
+computerMove :: Game -> Result -> Player -> IO Result
+computerMove game (EndOfGame val finishedState initialState) opponent = return (EndOfGame val finishedState initialState)
+
 computerMove game (ContinueGame state) opponent = 
       let 
           State internal avail = state
@@ -86,8 +88,8 @@ computerMove game (ContinueGame state) opponent =
             opponent_move <- opponent state
             return (connect4 opponent_move state)
 
-finishGame :: [[TeamColour]] -> Double -> TournamentState -> IO TournamentState
-finishGame end_board val (wins,losses,ties) = 
+finishGame :: State -> Double -> TournamentState -> IO TournamentState
+finishGame (State (_, _, end_board) _) val (wins,losses,ties) = 
     do 
         putStrLn("Game Over. Final Board.")
         printBoard end_board

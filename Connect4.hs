@@ -12,7 +12,7 @@ data State = State InternalState [Action]  -- internal_state available_actions
 
 instance Hashable State
 
-data Result = EndOfGame Double [[TeamColour]] State   -- end of game: value, end board, starting state
+data Result = EndOfGame Double State State   -- end of game: value, end board, starting state
             | ContinueGame State        -- continue with new state
          deriving (Eq, Show)
 
@@ -44,8 +44,8 @@ type InternalState = (Int, TeamColour, [[TeamColour]])   -- (open slots remainin
 -- otherwise continue the game with the new board, and the opposite colour's move
 connect4 :: Game
 connect4 move state
-    | win newBoard = EndOfGame 1 newBoard connect4Start
-    | remaining == 0 = EndOfGame 0 newBoard connect4Start
+    | win newBoard = EndOfGame 1 (State (remaining, otherColour, newBoard) []) connect4Start
+    | remaining == 0 = EndOfGame 0 (State (remaining, otherColour, newBoard) []) connect4Start
     | otherwise =
           ContinueGame (State (remaining - 1, otherColour, newBoard)
                         newAvailableActions)

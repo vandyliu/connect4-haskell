@@ -94,8 +94,12 @@ valueact game st act = value game (game act st)
 
 
 -- value game move result = value for current player of the state after move given result
-value:: Game -> Result -> Mem -> (Double,Mem)
-value _  (EndOfGame val _ _) mem = (val, mem)
+value :: Game -> Result -> Mem -> (Double, Mem)
+value _  (EndOfGame val (State (movesLeft,_,_) _) _) mem = (val * (fromIntegral movesLeft / 42), mem)
+-- win quickly then you get 1 * (35/42) = 35/42
+-- win slowly then you get 1 * (3/42) = 3/42
+-- lose slowly then you get -1 * (3/42) = -3/42
+-- lost quickly then you get -1 * (35/42) = -35/42
 value game (ContinueGame st) mem =
        let ((_,val), mem2) = minimax game st mem
           in  (-val,mem2)
@@ -117,4 +121,4 @@ hybridPlayer :: Int -> Integer -> Player
 hybridPlayer mmMoves monteCarloGames st = 
     let State is avail = st
         (movesLeft, _, _) = is 
-    in if movesLeft < min 16 mmMoves then mmPlayer st else monteCarloPlayer monteCarloGames st
+    in if movesLeft < mmMoves then mmPlayer st else monteCarloPlayer monteCarloGames st

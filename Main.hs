@@ -1,7 +1,7 @@
 module Main where
 
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Interface.IO.Game
 import Play
 import Connect4
 import Players
@@ -39,16 +39,25 @@ boardNumbers =
          translate 325 boardNumberY (Color white (Scale 0.5 0.5 (Text "7")))
     ]
 
-gameAsPicture :: Result -> Picture
-gameAsPicture (ContinueGame (State (_, playerTurn, board) _)) = 
-    pictures ([  colAsPicture (board !! 0) 0, 
+gameAsPicture :: Result -> IO Picture
+gameAsPicture (EndOfGame val (State (_, _, board) _) start_state) = return
+    (pictures ([  colAsPicture (board !! 0) 0, 
+                colAsPicture (board !! 1) 1, 
+                colAsPicture (board !! 2) 2, 
+                colAsPicture (board !! 3) 3, 
+                colAsPicture (board !! 4) 4, 
+                colAsPicture (board !! 5) 5, 
+                colAsPicture (board !! 6) 6] ++ boardNumbers ))
+
+gameAsPicture (ContinueGame (State (_, playerTurn, board) _)) = return
+    (pictures ([  colAsPicture (board !! 0) 0, 
                 colAsPicture (board !! 1) 1, 
                 colAsPicture (board !! 2) 2, 
                 colAsPicture (board !! 3) 3, 
                 colAsPicture (board !! 4) 4, 
                 colAsPicture (board !! 5) 5, 
                 colAsPicture (board !! 6) 6, 
-                translate 0 400 (color playerColor (circleSolid markerSize))] ++ boardNumbers)
+                translate 0 400 (color playerColor (circleSolid markerSize))] ++ boardNumbers))
                 where playerColor = if playerTurn == Black then markerYellowColor else markerRedColor
 
 -- function to draw a column of board bieces
@@ -69,20 +78,30 @@ nodeAsPicture node c r
 
 -- | Respond to key events.
 -- For a '1' keypress, place marker in 1 column.
-handleKeys :: Event -> Result -> Result
-handleKeys (EventKey (Char '1') _ _ _) (ContinueGame (State is actions)) =
-    if Action 1 `elem` actions then 
-        computerMove connect4 (connect4 (Action 1) (State is actions)) simplePlayer
-    else
-        ContinueGame (State is actions)
-handleKeys (EventKey (Char '2') _ _ _) (ContinueGame st) =
-  connect4 (Action 2) st
+handleKeys :: Event -> Result -> IO Result
+handleKeys (EventKey (Char '1') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 1) (State is actions)) (hybridPlayer 20 300)
+handleKeys (EventKey (Char '2') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 2) (State is actions)) (hybridPlayer 20 300)
+handleKeys (EventKey (Char '3') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 3) (State is actions)) (hybridPlayer 20 300)
+handleKeys (EventKey (Char '4') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 4) (State is actions)) (hybridPlayer 20 300)
+handleKeys (EventKey (Char '5') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 5) (State is actions)) (hybridPlayer 20 300)
+handleKeys (EventKey (Char '6') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 6) (State is actions)) (hybridPlayer 20 300)
+handleKeys (EventKey (Char '7') Up _ _) (ContinueGame (State is actions)) =
+    computerMove connect4 (connect4 (Action 7) (State is actions)) (hybridPlayer 20 300)
 
 -- Do nothing for all other events.
-handleKeys _ game = game
+handleKeys _ game = return game
+
+update :: Float -> Result -> IO Result
+update _ res = return res
 
 main :: IO ()
-main = Graphics.Gloss.playIO window bgcolor 30 (ContinueGame connect4Start) gameAsPicture handleKeys (const id)
+main = Graphics.Gloss.Interface.IO.Game.playIO window bgcolor 30 (ContinueGame connect4Start) gameAsPicture handleKeys update
 
 convertToIO :: Result -> IO Result 
 convertToIO res = do

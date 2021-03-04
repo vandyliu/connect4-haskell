@@ -1,7 +1,10 @@
+-- gameAsPicture, colAsPicture, nodeAsPicture and most constants are from https://wiki.ubc.ca/CPSC312-2019-Connect-Four
 module Main where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
+import Text.Read   (readMaybe)
+
 import Data.Char
 import Play
 import Connect4
@@ -40,9 +43,12 @@ boardNumbers =
          translate 325 boardNumberY (Color white (Scale 0.5 0.5 (Text "7")))
     ]
 
--- winningText displays the winner's text after there is a winner
-winningText :: Picture
-winningText = translate 20 370 (Color white (Scale 0.5 0.5 (Text " won!")))
+-- winningText displays the winner's text after there is a winner and text to play again
+winningText :: TeamColour -> Picture
+winningText playerTurn = pictures [translate (-80) 370 (Color white (Scale 0.3 0.3 (Text "Press 'r' to play again!"))),
+                        translate (-300) 370 (Color white (Scale 0.5 0.5 (Text " won!"))),
+                        translate (-320) 400 (color playerColor (circleSolid markerSize))]
+                where playerColor = if playerTurn == Red then markerYellowColor else markerRedColor
 
 -- gameAsPicture draws the current board state
 gameAsPicture :: Result -> IO Picture
@@ -53,9 +59,7 @@ gameAsPicture (EndOfGame val (State (_, playerTurn, board) _) start_state) = ret
                 colAsPicture (board !! 3) 3, 
                 colAsPicture (board !! 4) 4, 
                 colAsPicture (board !! 5) 5, 
-                colAsPicture (board !! 6) 6,
-                translate 0 400 (color playerColor (circleSolid markerSize))] ++ boardNumbers ++ [winningText]))
-                where playerColor = if playerTurn == Red then markerYellowColor else markerRedColor
+                colAsPicture (board !! 6) 6] ++ boardNumbers ++ [winningText playerTurn]))
 
 gameAsPicture (ContinueGame (State (_, playerTurn, board) _)) = return
     (pictures ([  colAsPicture (board !! 0) 0, 
@@ -86,30 +90,33 @@ nodeAsPicture node c r
 
 -- handleKeys responds to key events.
 -- For an X keypress, place marker in X column.
-handleKeys :: Player -> Event -> Result -> IO Result
-handleKeys cpu (EventKey (Char '1') Up _ _) result =
-    handleKeysHelper cpu 1 result
+handleKeys :: Player -> Result -> Event -> Result -> IO Result
+handleKeys cpu _ (EventKey (Char '1') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 1 (ContinueGame st)
 
-handleKeys cpu (EventKey (Char '2') Up _ _) result =
-    handleKeysHelper cpu 2 result
+handleKeys cpu _ (EventKey (Char '2') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 2 (ContinueGame st)
 
-handleKeys cpu (EventKey (Char '3') Up _ _) result =
-    handleKeysHelper cpu 3 result
+handleKeys cpu _ (EventKey (Char '3') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 3 (ContinueGame st)
 
-handleKeys cpu (EventKey (Char '4') Up _ _) result =
-    handleKeysHelper cpu 4 result
+handleKeys cpu _ (EventKey (Char '4') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 4 (ContinueGame st)
 
-handleKeys cpu (EventKey (Char '5') Up _ _) result =
-    handleKeysHelper cpu 5 result
+handleKeys cpu _ (EventKey (Char '5') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 5 (ContinueGame st)
 
-handleKeys cpu (EventKey (Char '6') Up _ _) result =
-    handleKeysHelper cpu 6 result
+handleKeys cpu _ (EventKey (Char '6') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 6 (ContinueGame st)
 
-handleKeys cpu (EventKey (Char '7') Up _ _) result =
-    handleKeysHelper cpu 7 result
+handleKeys cpu _ (EventKey (Char '7') Up _ _) (ContinueGame st) =
+    handleKeysHelper cpu 7 (ContinueGame st)
+
+-- Play again by pressing 'r' after a game has ended
+handleKeys cpu startingState (EventKey (Char 'r') Up _ _) (EndOfGame _ _ _) = return startingState
 
 -- Do nothing for all other events.
-handleKeys cpu _ game = return game
+handleKeys cpu _ _ game = return game
 
 -- handleKeysHelper is a helper for handleKeys
 handleKeysHelper :: Player -> Int -> Result -> IO Result
@@ -130,8 +137,23 @@ update _ res = return res
 main :: IO ()
 main = do
     cpuAlgo <- getCPUAlgo
-    startingState <- getStartingPlayer cpuAlgo
-    Graphics.Gloss.Interface.IO.Game.playIO window bgcolor 30 startingState gameAsPicture (handleKeys cpuAlgo) update
+    version <- getGameVersion
+    if version == "text" then do
+        Play.play connect4 connect4Start cpuAlgo (0,0,0)
+        return ()
+    else do
+        startingState <- getStartingPlayer cpuAlgo
+        Graphics.Gloss.Interface.IO.Game.playIO window bgcolor 30 startingState gameAsPicture (handleKeys cpuAlgo startingState) update
+
+-- getGameVersion asks the player if he/she/they want to play the text version or graphics version
+getGameVersion :: IO [Char]
+getGameVersion = do
+    putStrLn "What version do you want to play? 0=text, any other key=graphics."
+    version <- getLine
+    if version == "0" then
+        return "text"
+    else
+        return "graphics"
 
 -- getStartingPlayer asks the player who goes first
 getStartingPlayer :: Player -> IO Result
@@ -161,23 +183,35 @@ getCPUAlgo = do
 -- getHybridPlayerOptions asks the player what hybrid options the CPU will have
 getHybridPlayerOptions :: IO Player
 getHybridPlayerOptions = do
-    putStrLn "How many games do you want the hybrid Monte Carlo to try for each move? Default: 300"
+    putStrLn "How many games do you want the hybrid Monte Carlo to try for each move (> 0)? Default: 1000"
     games <- getLine
-    if and [isDigit c | c <- games] then do
-        putStrLn ("Hybrid Monte Carlo will play "++games++" games.")
-        return (hybridPlayer 19 (read games))
-    else do
-        putStrLn "Hybrid Monte Carlo will play 300 games."
-        return (hybridPlayer 19 300)
+    case (readMaybe games :: Maybe Integer) of
+        Nothing -> do
+            putStrLn "Hybrid Monte Carlo will play 1000 games."
+            return (hybridPlayer 19 1000)
+        Just games -> do
+            if games > 0 then do
+                putStrLn ("Hybrid Monte Carlo will play "++show games++" games.")
+                return (hybridPlayer 19 games)
+            else do
+                putStrLn "Hybrid Monte Carlo will play 1000 games."
+                return (hybridPlayer 19 1000)
 
 -- getMonteCarloPlayerOptions asks the player what Monte Carlo algorithm options the CPU will have
 getMonteCarloPlayerOptions :: IO Player 
 getMonteCarloPlayerOptions = do
-    putStrLn "How many games do you want Monte Carlo to try for each move? Default: 300"
+    putStrLn "How many games do you want Monte Carlo to try for each move (> 0)? Default: 1000"
     games <- getLine
-    if and [isDigit c | c <- games] then do
-        putStrLn ("Monte Carlo will play "++games++" games.")
-        return (monteCarloPlayer (read games))
-    else do
-        putStrLn "Monte Carlo will play 300 games."
-        return (monteCarloPlayer 300)
+    case (readMaybe games :: Maybe Integer) of
+        Nothing -> do
+            putStrLn "Monte Carlo will play 1000 games."
+            return (monteCarloPlayer 1000)
+        Just games -> do
+            if games > 0 then do
+                putStrLn ("Monte Carlo will play "++show games++" games.")
+                return (monteCarloPlayer games)
+            else do
+                putStrLn "Monte Carlo will play 1000 games."
+                return (monteCarloPlayer 1000)
+
+-- Test cases for integer inputs that should go to default: 0, "", "asdb", "1.21", "1as"

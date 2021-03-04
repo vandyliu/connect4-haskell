@@ -70,6 +70,7 @@ argmax (h:t)
       (bt,vt) = argmax t
       vh = snd h
 
+-- Majority of code below is taken from David Poole's CPSC 312 lectures --
 -- MiniMax Player --
 type Mem = Dict State (Action, Double)
 
@@ -121,7 +122,8 @@ argmaxMem f (h:t) mem
       ((bt,ft),mem1) = argmaxMem f t mem
       (fh,mem2) = f h mem1
 
--- Hybrid Player --
+-- Hybrid MonteCarlo-MiniMax Player --
+-- plays with the MonteCarlo algorithm at first then switches to MiniMax after a certain number of moves 
 hybridPlayer :: Int -> Integer -> Player
 hybridPlayer mmMoves monteCarloGames st = 
     let State is avail = st

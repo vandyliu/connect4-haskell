@@ -115,12 +115,12 @@ fourInARow (x:xs) = (x /= Empty && ([x,x,x] == take 3 xs)) || fourInARow xs
 connect4Start :: State
 connect4Start = State (41, Red, [[Empty | _ <- [1..6]] | _ <- [1..7]]) [Action n | n <- [1..7]]
 
-connect4LastPlayDraw :: State
 -- connect4LastPlayDraw goes straight to a state of the game where there will certainly be a draw
+connect4LastPlayDraw :: State
 connect4LastPlayDraw = State (1, Red, [[Yellow, Yellow, Yellow, Red, Empty, Empty], [Red, Red, Red, Yellow, Red, Yellow], [Yellow, Red, Yellow, Yellow, Yellow, Red], [Yellow, Red, Yellow, Yellow, Yellow, Red], [Red, Yellow, Red, Red, Red, Yellow], [Red, Red, Yellow, Red, Yellow, Yellow], [Red, Red, Yellow, Red, Yellow, Red]]) [Action n | n <- [1]]
 
-connect4LastPlayWin :: State
 -- connect4LastPlayWin goes straight to a state of the game where there will certainly be a winner
+connect4LastPlayWin :: State
 connect4LastPlayWin = State (1, Red, [[Yellow, Red, Red, Yellow, Red, Yellow], [Red, Red, Yellow, Red, Yellow, Red], [Red, Red, Yellow, Yellow, Yellow, Red], [Red, Yellow, Red, Yellow, Yellow, Yellow], [Yellow, Red, Red, Yellow, Empty, Empty], [Yellow, Red, Yellow, Red, Yellow, Red], [Yellow, Red, Red, Yellow, Red, Yellow]]) [Action n | n <- [5]]
 
 -- Print the board to the output, where "X" represents Red, "O" represents Yellow, and "-" represents an empty space

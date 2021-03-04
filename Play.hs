@@ -15,7 +15,6 @@ type TournamentState = (Int,Int,Int)   -- wins, losses, ties
 
 
 play :: Game -> State -> Player -> TournamentState -> IO TournamentState
-
 play game start_state opponent ts =
   let (wins, losses,ties) = ts in
   do
@@ -31,8 +30,8 @@ play game start_state opponent ts =
             then return ts
         else play game start_state opponent ts
 
-personPlay :: Game -> Result -> Player -> TournamentState -> IO TournamentState
 -- opponent has played, the person must now play
+personPlay :: Game -> Result -> Player -> TournamentState -> IO TournamentState
 
 personPlay game (ContinueGame state) opponent ts =
    do
@@ -58,9 +57,9 @@ personPlay game (EndOfGame val end_board start_state) opponent ts =
     newts <- finishGame end_board (-val) ts  -- val is value to computer; -val is value for person
     play game start_state opponent newts
 
-computerPlay :: Game -> Result -> Player -> TournamentState -> IO TournamentState
 -- computerPlay game current_result opponent ts
 -- person has played, the computer must now play
+computerPlay :: Game -> Result -> Player -> TournamentState -> IO TournamentState
 computerPlay game (EndOfGame val end_board start_state) opponent ts =
    do
       newts <- finishGame end_board val ts
@@ -76,6 +75,7 @@ computerPlay game (ContinueGame state) opponent ts =
             putStrLn ("The computer (" ++ show colour ++ ") chose " ++ show opponent_move)
             personPlay game (game opponent_move state) opponent ts
 
+-- computerMove does a computer move for the graphics version
 computerMove :: Game -> Result -> Player -> IO Result
 computerMove game (EndOfGame val finishedState initialState) opponent = return (EndOfGame val finishedState initialState)
 
@@ -95,8 +95,8 @@ finishGame (State (_, _, end_board) _) val (wins,losses,ties) =
         printBoard end_board
         updateTournamentState val (wins,losses,ties)
 
-updateTournamentState :: Double -> TournamentState -> IO TournamentState
 -- given value to the person, the tournament state, return the new tournament state
+updateTournamentState :: Double -> TournamentState -> IO TournamentState
 updateTournamentState val (wins,losses,ties)
   | val > 0 = do
       putStrLn "You Won"
@@ -107,6 +107,3 @@ updateTournamentState val (wins,losses,ties)
   | otherwise = do
       putStrLn "Computer won!"
       return (wins,losses+1,ties)
-
-start :: IO TournamentState
-start = play connect4 connect4Start simplePlayer (0,0,0)

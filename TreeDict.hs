@@ -1,4 +1,6 @@
 -- CPSC 312 - 2019 - Binary Search Tree Dictionaries in Haskell
+-- Code below is taken with permission from David Poole's CPSC 312 lectures --
+
 module TreeDict
   (Dict,
    emptyDict,  -- Dict k v
